@@ -6,6 +6,9 @@ import cors from 'cors';
 import http from 'http';
 
 import { connectDB, getCollection, closeDB } from './config/database.js';
+import { orderhandler } from './socket/orderhandler.js';
+import { generateOrderId } from './utils/helper.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +33,27 @@ app.use(express.urlencoded({ extended: true }));
 // ==========================================
 // ROUTES
 // ==========================================
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("✅ User connected:", socket.id);
+
+  socket.emit("message", "Hello from the server!");
+  generateOrderId()
+  console.log("Generated Order ID:", generateOrderId())
+  orderhandler(io, socket)
+
+  // socket.on("disconnect", () => {
+  //   console.log("❌ User disconnected");
+  // });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
